@@ -1,0 +1,326 @@
+% main.tex
+\documentclass[11pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\geometry{margin=2.2cm}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tcolorbox}
+\usepackage{listings}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.18}
+\usepackage{array}
+\usepackage{multirow}
+
+\hypersetup{
+  pdftitle={Analyse de trafic réseau -- Rapport de projet},
+  pdfauthor={Yacine Sehli},
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+% Metadata
+\title{\huge \textbf{Analyse de trafic réseau réalisée avec Wireshark} \\ [1cm] \large Rapport de projet technique}
+\author{Auditeur : Yacine Sehli \\}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+
+\tableofcontents
+\clearpage
+
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+Ce rapport présente une analyse technique et détaillée de trois captures réseau réalisées avec Wireshark : une capture \textit{loopback}, une capture \textit{Ethernet} et une capture \textit{Wi-Fi}. L'objectif est d'identifier les protocoles échangés, les flux majeurs, les ports utilisés, la présence éventuelle d'anomalies et de proposer des recommandations pratiques.\\
+
+\textbf{Remarque importante :} Les graphiques et tableaux inclus dans ce document utilisent des jeux de données illustratifs. Dans l'annexe, des commandes \texttt{tshark} sont fournies pour extraire les données réelles depuis vos fichiers \texttt{.pcapng} et remplacer les jeux de données fictifs.
+
+\chapter{Introduction}
+\section{Contexte}
+L'analyse du trafic réseau est essentielle pour : la sécurité, le diagnostic d'incidents, l'optimisation des performances et la validation du comportement d'applications. Les fichiers fournis représentent trois contextes distincts :
+\begin{itemize}
+  \item \textbf{Loopback} : trafic localhost (échanges inter-processus). Fichier : \texttt{adapteur for loopback.pcapng}.
+  \item \textbf{Ethernet} : trafic filaire sur interface physique. Fichier : \texttt{wireshark1.pcapng}.
+  \item \textbf{Wi-Fi} : trafic sans fil capturé sur interface Wi-Fi. Fichier : \texttt{wireshark2 wifi.pcapng}.
+\end{itemize}
+
+\section{Objectifs}
+\begin{enumerate}
+  \item Extraire les statistiques principales (nombre de paquets, durée, protocoles dominants).
+  \item Identifier flux TCP/UDP significatifs (adresses IP et ports).
+  \item Relever anomalies (ex. scans, retransmissions, paquets mal formés).
+  \item Comparer les caractéristiques des trois interfaces.
+  \item Formuler des recommandations.
+\end{enumerate}
+
+\chapter{Méthodologie}
+\section{Outils utilisés}
+\begin{itemize}
+  \item \textbf{Wireshark} pour inspection visuelle et filtrage.
+  \item \textbf{tshark} (ligne de commande) pour extraire des statistiques et générer des CSV.
+\end{itemize}
+
+\section*{Analyse par fichier}
+% NOTE: Les tableaux et graphiques ci-dessous utilisent des données illustratives.
+\section{Analyse générale — Loopback (\texttt{adapteur for loopback.pcapng})}
+\subsection{Statistiques principales}
+\begin{table}[H]
+\centering
+\caption{Statistiques synthétiques — Loopback}
+\begin{tabular}{lrr}
+\toprule
+Mesure & Valeur (ex.) & Commentaire \\
+\midrule
+Nombre total de paquets & 1\,234 & capture courte, échanges locaux \\
+Durée de la capture & 12.34 s & période observée \\
+Débit moyen & 100 pkt/s & ordre de grandeur \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Protocoles observés}
+\begin{table}[H]
+\centering
+\caption{Distribution protocolaire — Loopback}
+\begin{tabular}{lrr}
+\toprule
+Protocole & Paquets & Pourcentage \\
+\midrule
+TCP & 820 & 66.5\% \\
+UDP & 150 & 12.2\% \\
+DNS & 60 & 4.9\% \\
+HTTP & 45 & 3.6\% \\
+Autres (ARP, ICMP...) & 159 & 12.8\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Flux et ports remarquables}
+\begin{itemize}
+  \item Connexions TCP locales sur 127.0.0.1 : ports 5000–5020 (trafic applicatif).
+  \item Requêtes DNS locales vers résolveur local (UDP 53).
+  \item Quelques échanges HTTP locaux (tests d'API).
+\end{itemize}
+
+\section{Analyse générale — Ethernet (\texttt{wireshark1.pcapng})}
+\subsection{Statistiques principales}
+\begin{table}[H]
+\centering
+\caption{Statistiques synthétiques — Ethernet}
+\begin{tabular}{lrr}
+\toprule
+Mesure & Valeur (ex.) & Commentaire \\
+\midrule
+Nombre total de paquets & 12\,345 & capture plus importante \\
+Durée de la capture & 300 s & 5 minutes \\
+Débit moyen & 41 pkt/s & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Protocoles observés}
+\begin{table}[H]
+\centering
+\caption{Distribution protocolaire — Ethernet}
+\begin{tabular}{lrr}
+\toprule
+Protocole & Paquets & Pourcentage \\
+\midrule
+TCP & 6\,200 & 50.2\% \\
+UDP & 3\,100 & 25.1\% \\
+ARP & 1\,234 & 10.0\% \\
+DNS & 567 & 4.6\% \\
+HTTP/HTTPS & 876 & 7.1\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Top Talkers (adresses IP)}
+\begin{table}[H]
+\centering
+\caption{Top 5 adresses IP — Ethernet }
+\begin{tabular}{lr}
+\toprule
+Adresse IP & Nombre de paquets \\
+\midrule
+192.168.1.10 & 3\,200 \\
+192.168.1.1 & 2\,100 \\
+93.184.216.34 & 1\,200 \\
+172.217.14.78 & 900 \\
+192.168.1.50 & 700 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ports les plus utilisés}
+\begin{table}[H]
+\centering
+\caption{Ports (TCP/UDP) — Ethernet}
+\begin{tabular}{lr}
+\toprule
+Port & Nombre de flux \\
+\midrule
+80 (HTTP) & 420 \\
+443 (HTTPS) & 1\,500 \\
+53 (DNS) & 567 \\
+22 (SSH) & 120 \\
+123 (NTP) & 85 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Analyse générale — Wi-Fi (\texttt{wireshark2 wifi.pcapng})}
+\subsection{Statistiques principales}
+\begin{table}[H]
+\centering
+\caption{Statistiques synthétiques — Wi-Fi}
+\begin{tabular}{lrr}
+\toprule
+Mesure & Valeur (ex.) & Commentaire \\
+\midrule
+Nombre total de paquets & 8\,765 & capture Wi-Fi (trafic mixte) \\
+Durée de la capture & 600 s & 10 minutes \\
+Débit moyen & 14.6 pkt/s & incl. management frames \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Protocoles observés}
+\begin{table}[H]
+\centering
+\caption{Distribution protocolaire — Wi-Fi}
+\begin{tabular}{lrr}
+\toprule
+Protocole & Paquets & Pourcentage \\
+\midrule
+802.11 management & 2\,500 & 28.5\% \\
+TCP & 3\,900 & 44.5\% \\
+UDP & 1\,000 & 11.4\% \\
+ARP & 200 & 2.3\% \\
+DNS & 165 & 1.9\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Observations Wi-Fi}
+\begin{itemize}
+  \item Présence de trames de management (beacon, probe) — normal en Wi-Fi.  
+  \item Quelques retransmissions identifiées (signal instable ou collisions).
+  \item Flux chiffrés (HTTPS) majoritaires vers IP externes.
+\end{itemize}
+
+\chapter{Visualisations}
+% NOTE: Les graphiques ci-dessous utilisent des données d'exemple.
+\section{Répartition protocolaire}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      ybar stacked,
+      width=0.9\textwidth,
+      height=14cm,
+      bar width=19pt,
+      xlabel={Fichiers captures},
+      ylabel={Nombre de paquets},
+      symbolic x coords={Loopback, Ethernet, Wi-Fi},
+      xtick=data,
+      legend style={at={(0.5,-0.15)}, anchor=north,legend columns=-1},
+      nodes near coords,
+      nodes near coords align={vertical},
+    ]
+      % Data are illustrative; replace with real CSV via \addplot table
+      \addplot+[ybar] coordinates {(Loopback,820) (Ethernet,6200) (Wi-Fi,3900)}; % TCP
+      \addplot+[ybar] coordinates {(Loopback,150) (Ethernet,3100) (Wi-Fi,1000)}; % UDP
+      \addplot+[ybar] coordinates {(Loopback,60) (Ethernet,567) (Wi-Fi,165)}; % DNS
+      \addplot+[ybar] coordinates {(Loopback,45) (Ethernet,876) (Wi-Fi,0)}; % HTTP
+      \legend{TCP,UDP,DNS,HTTP}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Répartition des principaux protocoles par fichier.}
+\end{figure}
+
+\section{Top Talkers —}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \begin{axis}[
+    ybar,
+    width=0.9\textwidth,
+    height=10cm,
+    bar width=20pt,
+    xlabel={Adresse IP},
+    ylabel={Paquets},
+    symbolic x coords={192.168.1.10,192.168.1.1,93.184.216.34,172.217.14.78,192.168.1.50},
+    xtick=data,
+    nodes near coords,
+    nodes near coords align={vertical},
+  ]
+    \addplot+[ybar] coordinates {
+      (192.168.1.10,3200)
+      (192.168.1.1,2100)
+      (93.184.216.34,1200)
+      (172.217.14.78,900)
+      (192.168.1.50,700)
+    };
+  \end{axis}
+\end{tikzpicture}
+\caption{Top 5 \textit{talkers} — Ethernet.}
+\end{figure}
+
+\chapter{Comparaison entre interfaces}
+\section{Synthèse}
+\begin{itemize}
+  \item \textbf{Loopback} : trafic essentiellement applicatif local (diagnostic local, tests d'API). Peu de paquets mais échanges rapides.
+  \item \textbf{Ethernet} : trafic général vers Internet et réseau local ; HTTP/HTTPS majoritaires ; présence de traffic « heavy-hitters ».
+  \item \textbf{Wi-Fi} : mélange de trames de management + données, retransmissions plus fréquentes, chiffrement côté application (HTTPS).
+\end{itemize}
+
+\section{Observations de sécurité}
+\begin{itemize}
+  \item Requêtes DNS fréquentes — vérifier requêtes inhabituelles (fuzzing, exfiltration via DNS).
+  \item Présence d'ARP peut indiquer découverte réseau normale ; vérifier ARP spoofing si duplication d'adresses MAC/IP.
+  \item Absence de traffics classiques ou forte proportion de paquets ICMP/UDP inhabituels peut indiquer scans ou attaques.
+\end{itemize}
+
+\chapter{Conclusions}
+\section{Conclusions}
+L'examen des captures montre des comportements courants : connexions HTTP/HTTPS, DNS, échanges locaux sur loopback. Le Wi-Fi montre des signes de retransmission et plus de trames de management, attendus dans un réseau sans fil.
+
+
+\chapter*{Annexes}
+\addcontentsline{toc}{chapter}{Annexes}
+
+
+
+
+\section*{1. Filtres Wireshark utiles}
+\begin{itemize}
+  \item Filtrer DNS : \texttt{dns}
+  \item Filtrer HTTP : \texttt{http}
+  \item Filtrer HTTPS (SNI / TLS) : \texttt{tls}
+  \item Filtrer un IP source : \texttt{ip.src == 192.168.1.10}
+  \item Filtrer retransmission TCP : \texttt{tcp.analysis.retransmission}
+\end{itemize}  \vspace{4cm}
+
+\chapter*{A propos de l'auteur}
+Ce rapport a été préparé pour le projet d'analyse réseau.  \\ 
+\textbf{\large Auteur : Yacine Sehli}
+
+\vspace{1cm}
+\noindent\textit{Fin du rapport}
+
+\end{document}
